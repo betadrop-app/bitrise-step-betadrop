@@ -4,7 +4,7 @@ Upload the `.ipa` or `.apk` your workflow built to [BetaDrop](https://betadrop.a
 install link as `$BETADROP_INSTALL_URL`.
 
 ```yaml
-- git::https://github.com/betadrop-app/bitrise-step-betadrop.git@0.1.0:
+- git::https://github.com/betadrop-app/bitrise-step-betadrop.git@0.1.1:
     inputs:
       - api_token: $BETADROP_TOKEN
       - standing_link: acmebeta

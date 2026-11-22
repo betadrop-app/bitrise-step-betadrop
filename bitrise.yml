@@ -1,0 +1,68 @@
+format_version: "11"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+app:
+  envs:
+  # Define these in .bitrise.secrets.yml. That file is ignored by git.
+  # BETADROP_TOKEN: a BetaDrop API token (betadrop.app > Settings > Developer > API tokens).
+  # TEST_FILE_PATH: an .ipa or .apk to upload.
+  - BETADROP_TOKEN: $BETADROP_TOKEN
+  - TEST_FILE_PATH: $TEST_FILE_PATH
+
+workflows:
+  test:
+    description: |-
+      Runs the Step once against the live BetaDrop API.
+      Each run uploads TEST_FILE_PATH as a new build on the account behind BETADROP_TOKEN.
+    steps:
+    - path::./:
+        title: Step test
+        run_if: "true"
+        inputs:
+        - api_token: $BETADROP_TOKEN
+        - file_path: $TEST_FILE_PATH
+    - script:
+        title: Check the outputs
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -e
+            if [ -z "$BETADROP_INSTALL_URL" ]; then
+              echo "BETADROP_INSTALL_URL was not exported"
+              exit 1
+            fi
+            echo "Install link: $BETADROP_INSTALL_URL"
+
+  # ----------------------------------------------------------------
+  # --- Workflows to share this Step in the Bitrise StepLib
+  audit-this-step:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            stepman audit --step-yml ./step.yml
+
+  share-this-step:
+    envs:
+    # Your own fork of https://github.com/bitrise-io/bitrise-steplib
+    - MY_STEPLIB_REPO_FORK_GIT_URL: https://github.com/kaushalrola/bitrise-steplib.git
+    - STEP_ID_IN_STEPLIB: betadrop
+    - STEP_GIT_VERION_TAG_TO_SHARE: 0.1.1
+    - STEP_GIT_CLONE_URL: https://github.com/betadrop-app/bitrise-step-betadrop.git
+    description: |-
+      Shares this Step in the Bitrise StepLib.
+
+      Before you run this: push this repository to GitHub (from betadrop-platform, run
+      web/scripts/sync-public-mirrors.sh bitrise) and create the git tag named in
+      STEP_GIT_VERION_TAG_TO_SHARE. Then run: bitrise run share-this-step
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            bitrise share start -c "${MY_STEPLIB_REPO_FORK_GIT_URL}"
+            bitrise share create --stepid "${STEP_ID_IN_STEPLIB}" --tag "${STEP_GIT_VERION_TAG_TO_SHARE}" --git "${STEP_GIT_CLONE_URL}"
+            bitrise share finish
