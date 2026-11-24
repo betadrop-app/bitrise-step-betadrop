@@ -7,6 +7,8 @@ fail() { echo "ERROR: $*" >&2; exit 1; }
 
 [ -n "${api_token:-}" ] || fail "api_token is empty. Add a BetaDrop API token as a Secret and pass it in."
 export BETADROP_TOKEN="$api_token"
+# Label uploads as coming from this step (X-BetaDrop-Client: bitrise). CLI 0.5.0+ reads it.
+export BETADROP_VIA=bitrise
 
 # Android Build exports a pipe-separated list; take it apart and insist on exactly one build.
 path="$(printf '%s' "${file_path:-}" | tr '|' '\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | grep -v '^$' || true)"
@@ -20,7 +22,7 @@ if [ -n "${BETADROP_CLI:-}" ]; then
   cli=( $BETADROP_CLI )
 else
   command -v npx >/dev/null 2>&1 || fail "Node.js is not available on this stack."
-  cli=( npx --yes "@betadrop/cli@${cli_version:-0.4.0}" )
+  cli=( npx --yes "@betadrop/cli@${cli_version:-0.5.0}" )
 fi
 
 number() {
